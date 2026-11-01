@@ -118,17 +118,10 @@ If you downloaded a ZIP instead, extract it and open a terminal in that folder.
 
 ## 4. Option A — Docker quick start
 
-This is the fastest path if Docker Desktop is installed.
+This is the fastest path if Docker Desktop is installed. The compose file already contains the database, cache, and service configuration, so no `.env` file is required.
 
 ```bash
-cp .env.example .env
 docker compose up --build
-```
-
-On Windows PowerShell, `cp` also works in recent versions; otherwise use:
-
-```powershell
-Copy-Item .env.example .env
 ```
 
 Then open **http://localhost:8080**.
