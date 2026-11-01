@@ -315,7 +315,7 @@ export function Dashboard() {
                 <span className="h-2 w-2 rounded-sm bg-bull" /> actual
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-sm border border-[#60A5FA] bg-accent/20" /> Kronos
+                <span className="h-2 w-2 rounded-sm border border-[#60A5FA] bg-accent/20" /> forecast
               </span>
               <span className="flex items-center gap-1">
                 <span className="h-2 w-2 rounded-sm border border-[#FBBF24] bg-amber-400/20" /> realized
@@ -343,7 +343,7 @@ export function Dashboard() {
             </div>
           )}
           <p className="mt-2 text-[11px] leading-5 text-mute">
-            Solid green/red candles are historical Binance data. Blue-bordered candles are Kronos estimates starting
+            Solid green/red candles are historical Binance data. Blue-bordered candles are CandleCast forecasts starting
             after the last closed bar. Amber candles are realized outcomes in replay. Forecasts are sampled paths, not
             guaranteed prices.
           </p>

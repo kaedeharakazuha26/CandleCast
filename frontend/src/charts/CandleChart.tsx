@@ -126,7 +126,7 @@ export function CandleChart({
       borderDownColor: "#818CF8",
       wickUpColor: "#60A5FA",
       wickDownColor: "#818CF8",
-      title: "Kronos",
+      title: "Forecast",
       priceLineVisible: false,
     });
     const realized = chart.addCandlestickSeries({
