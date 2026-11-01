@@ -34,7 +34,7 @@ Nothing in the forecast path is mocked. If the model or exchange is unavailable,
 
 ### Main pages
 
-- **Markets** — searchable list of Binance USDT pairs with live prices.
+- **Markets** — searchable list of Binance USDT pairs with live prices, plus gainers/losers/most-active rankings.
 - **Terminal** — chart, indicators, forecast controls and AI summary.
 - **History** — stored forecasts replayed against realized candles.
 - **Backtesting** — walk-forward evaluation with no look-ahead.

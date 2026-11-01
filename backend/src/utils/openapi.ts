@@ -71,6 +71,15 @@ export const openApiSpec = {
         responses: { "200": { description: "{ items: Ticker[] }" } },
       },
     },
+    "/api/market/tickers/all": {
+      get: {
+        tags: ["Market"],
+        summary: "All USDT tickers for market-wide rankings",
+        description:
+          "One cached call covering every tradable USDT pair, sorted by 24h quote volume. No pagination.",
+        responses: { "200": { description: "{ items: Ticker[] }" } },
+      },
+    },
     "/api/market/ticker/{symbol}": {
       get: {
         tags: ["Market"],

@@ -33,6 +33,11 @@ export async function fetchTickers(symbols: string[]) {
   return data.items;
 }
 
+export async function fetchAllTickers() {
+  const { data } = await api.get<{ items: Ticker[] }>("/market/tickers/all");
+  return data.items;
+}
+
 export async function fetchKlines(
   symbol: string,
   timeframe: Timeframe,

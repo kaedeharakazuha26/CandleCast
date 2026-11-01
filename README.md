@@ -12,7 +12,7 @@ Forecasts are sampled K-line paths, not calibrated probabilities and not trade a
 
 ## What is implemented
 
-- **Markets** — search every Binance USDT spot pair; live `miniTicker` prices with a 20s REST fallback, 24h statistics, pagination, quick-add to watchlist.
+- **Markets** — search every Binance USDT spot pair; live `miniTicker` prices with a 20s REST fallback, 24h statistics, gainers/losers/most-active rankings, pagination, quick-add to watchlist.
 - **Terminal** — live Binance OHLCV over Socket.IO, EMA/SMA/Bollinger/VWAP/volume overlays, Kronos forecast candles, realized-candle replay overlay.
 - **Forecasts** — horizon `1–50`, lookback `128–512`, temperature/top-p/sample controls, optional multi-scenario (`5/20/50`) runs, optional ±1σ dispersion from extra independent Kronos passes.
 - **History** — stored forecast replay, predicted-vs-realized tables, per-field MAE/RMSE/MAPE, candle-body and horizon-trend direction accuracy, CSV export.

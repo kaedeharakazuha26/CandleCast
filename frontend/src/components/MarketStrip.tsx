@@ -7,7 +7,20 @@ import type { Ticker } from "../types/market";
 import { formatPercent, formatPrice } from "../utils/format";
 import { cn } from "../utils/cn";
 
-const SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"];
+const SYMBOLS = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "BNBUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "ADAUSDT",
+  "AVAXUSDT",
+  "LINKUSDT",
+  "SUIUSDT",
+  "LTCUSDT",
+  "HBARUSDT",
+];
 
 export function MarketStrip() {
   const navigate = useNavigate();

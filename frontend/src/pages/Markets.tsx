@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, BarChart3, Plus, RefreshCw, Search, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, Flame, Plus, RefreshCw, Search, Star, TrendingDown, TrendingUp } from "lucide-react";
 import { Panel, Stat } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { addWatchlist, fetchSymbols, fetchTickers } from "../services/api";
+import { addWatchlist, fetchAllTickers, fetchSymbols, fetchTickers } from "../services/api";
 import { useTickerStream } from "../hooks/useTickerStream";
 import { useTerminal } from "../store/terminal";
 import type { Ticker } from "../types/market";
@@ -13,6 +13,18 @@ import { cn } from "../utils/cn";
 
 const PAGE_SIZE = 24;
 const COMMON = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"];
+
+const MOVER_TABS = [
+  { id: "gainers", label: "Gainers", icon: TrendingUp },
+  { id: "losers", label: "Losers", icon: TrendingDown },
+  { id: "active", label: "Most active", icon: Flame },
+] as const;
+
+type MoverTab = (typeof MOVER_TABS)[number]["id"];
+
+/** Ignore thin pairs so the ranking reflects markets people actually trade. */
+const MOVER_MIN_QUOTE_VOLUME = 1_000_000;
+const MOVER_COUNT = 8;
 
 export function Markets() {
   const navigate = useNavigate();
@@ -29,6 +41,10 @@ export function Markets() {
   const [notice, setNotice] = useState<string | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
   const [restUpdatedAt, setRestUpdatedAt] = useState<number | null>(null);
+  const [movers, setMovers] = useState<Ticker[]>([]);
+  const [moverTab, setMoverTab] = useState<MoverTab>("gainers");
+  const [moversAt, setMoversAt] = useState<number | null>(null);
+  const [moversError, setMoversError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +83,21 @@ export function Markets() {
   const { tickers: liveTickers, updatedAt: liveUpdatedAt } = useTickerStream(pageSymbols);
   const asOf = Math.max(liveUpdatedAt ?? 0, restUpdatedAt ?? 0) || null;
   const streamActive = liveUpdatedAt != null && liveUpdatedAt >= (restUpdatedAt ?? 0) - 5_000;
+
+  const ranked = useMemo(() => {
+    const liquid = movers.filter(
+      (t) => Number.isFinite(t.change24h) && t.quoteVolume24h >= MOVER_MIN_QUOTE_VOLUME,
+    );
+    if (moverTab === "active") {
+      return [...liquid].sort((a, b) => b.quoteVolume24h - a.quoteVolume24h).slice(0, MOVER_COUNT);
+    }
+    const direction = moverTab === "gainers" ? 1 : -1;
+    return [...liquid].sort((a, b) => direction * (b.change24h - a.change24h)).slice(0, MOVER_COUNT);
+  }, [movers, moverTab]);
+
+  const moverSymbols = useMemo(() => ranked.map((t) => t.symbol), [ranked]);
+  const { tickers: liveMovers } = useTickerStream(moverSymbols);
+  const moverRows = ranked.map((t) => liveMovers[t.symbol] ?? t);
 
   useEffect(() => {
     setPage(0);
@@ -112,6 +143,27 @@ export function Markets() {
     // pageKey identifies the visible symbol set.
   }, [pageKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const load = () =>
+      fetchAllTickers()
+        .then((items) => {
+          if (cancelled) return;
+          setMovers(items);
+          setMoversAt(Date.now());
+          setMoversError(null);
+        })
+        .catch(() => {
+          if (!cancelled) setMoversError("Market rankings are unavailable. The full pair list still works.");
+        });
+    void load();
+    const timer = setInterval(load, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
   async function watch(symbol: string) {
     setAdding(symbol);
     setNotice(null);
@@ -155,6 +207,68 @@ export function Markets() {
             />
           </div>
         </div>
+      </Panel>
+
+      <Panel
+        title="Top movers"
+        action={
+          <div className="flex items-center gap-1">
+            {MOVER_TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setMoverTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] transition",
+                    moverTab === tab.id
+                      ? "border-accent/40 bg-accent/15 text-accent"
+                      : "border-white/5 bg-secondary/40 text-mute hover:text-ink",
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        }
+      >
+        {moversError ? (
+          <p className="text-xs text-bear">{moversError}</p>
+        ) : !moverRows.length ? (
+          <p className="text-xs text-mute">Ranking Binance USDT pairs…</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              {moverRows.map((t) => {
+                const up = t.change24h >= 0;
+                return (
+                  <button
+                    key={t.symbol}
+                    onClick={() => openTerminal(t.symbol)}
+                    className="rounded-lg border border-white/5 bg-secondary/40 px-3 py-2 text-left transition hover:border-accent/40 hover:bg-accent/10"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs text-ink">{t.symbol.replace(/USDT$/, "")}</span>
+                      <span className={cn("font-mono text-[11px]", up ? "text-bull" : "text-bear")}>
+                        {formatPercent(t.change24h)}
+                      </span>
+                    </div>
+                    <div className="mt-1 font-mono text-sm text-ink">{formatPrice(t.price)}</div>
+                    <div className="mt-0.5 text-[10px] text-mute">{formatCompact(t.quoteVolume24h)} USDT vol</div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[11px] leading-5 text-mute">
+              Ranked across {movers.length} tradable USDT pairs from one cached Binance snapshot
+              {moversAt ? ` at ${formatClock(moversAt)}` : ""}. Pairs below {formatCompact(MOVER_MIN_QUOTE_VOLUME)} USDT of
+              24h quote volume are excluded. Prices update from the live ticker stream; click a card to open it in the
+              terminal.
+            </p>
+          </>
+        )}
       </Panel>
 
       <Panel>

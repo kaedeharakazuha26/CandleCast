@@ -13,7 +13,8 @@ export async function listSymbols(): Promise<string[]> {
   if (cached) return JSON.parse(cached) as string[];
   const { data } = await client.get("/api/v3/exchangeInfo");
   const symbols = (data.symbols as Array<{ symbol: string; status: string; quoteAsset: string }>)
-    .filter((s) => s.status === "TRADING" && s.quoteAsset === "USDT")
+    // The rest of the app (streams, tickers, forecasts) expects ASCII tickers.
+    .filter((s) => s.status === "TRADING" && s.quoteAsset === "USDT" && /^[A-Z0-9]{5,20}$/.test(s.symbol))
     .map((s) => s.symbol)
     .sort((a, b) => {
       const rank = (s: string) => {
@@ -55,6 +56,37 @@ export async function getTickers(symbols: string[]): Promise<Ticker[]> {
   );
   const tickers = settled.filter((t): t is Ticker => t != null);
   await cacheSet(cacheKey, JSON.stringify(tickers), 10);
+  return tickers;
+}
+
+/**
+ * Every tradable USDT pair in one upstream call, ranked by 24h quote volume.
+ * Used for market-wide rankings (gainers, losers, most active).
+ */
+export async function getAllTickers(): Promise<Ticker[]> {
+  const cached = await cacheGet("tickers:all");
+  if (cached) return JSON.parse(cached) as Ticker[];
+
+  const [allowed, { data }] = await Promise.all([
+    listSymbols(),
+    client.get("/api/v3/ticker/24hr"),
+  ]);
+  const tradable = new Set(allowed);
+  const tickers = (data as Array<Record<string, string>>)
+    .filter((row) => tradable.has(row.symbol))
+    .map((row) => ({
+      symbol: row.symbol,
+      price: Number(row.lastPrice),
+      change24h: Number(row.priceChangePercent),
+      high24h: Number(row.highPrice),
+      low24h: Number(row.lowPrice),
+      volume24h: Number(row.volume),
+      quoteVolume24h: Number(row.quoteVolume),
+    }))
+    .filter((t) => Number.isFinite(t.price) && t.price > 0)
+    .sort((a, b) => b.quoteVolume24h - a.quoteVolume24h);
+
+  await cacheSet("tickers:all", JSON.stringify(tickers), 20);
   return tickers;
 }
 

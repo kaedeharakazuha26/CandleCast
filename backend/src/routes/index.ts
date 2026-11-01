@@ -9,6 +9,7 @@ export const router = Router();
 
 router.get("/market/symbols", asyncHandler(market.symbols));
 router.get("/market/tickers", asyncHandler(market.tickers));
+router.get("/market/tickers/all", asyncHandler(market.allTickers));
 router.get("/market/ticker/:symbol", asyncHandler(market.ticker));
 router.get("/market/klines/:symbol", asyncHandler(market.klines));
 router.get("/indicators/:symbol", asyncHandler(market.indicators));

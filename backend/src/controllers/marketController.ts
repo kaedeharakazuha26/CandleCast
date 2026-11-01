@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
-import { getKlines, getKlinesRange, getTickers, listSymbols, getTicker } from "../services/binance.js";
+import { getAllTickers, getKlines, getKlinesRange, getTickers, listSymbols, getTicker } from "../services/binance.js";
 import { computeIndicators } from "../services/indicators.js";
 
 const tfSchema = z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]);
@@ -27,6 +27,10 @@ export async function tickers(req: Request, res: Response) {
     return;
   }
   res.json({ items: await getTickers(symbols) });
+}
+
+export async function allTickers(_req: Request, res: Response) {
+  res.json({ items: await getAllTickers() });
 }
 
 export async function klines(req: Request, res: Response) {

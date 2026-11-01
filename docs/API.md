@@ -13,6 +13,7 @@ All gateway routes are under `/api` except `GET /health`. Responses are JSON unl
 | --- | --- | --- |
 | GET | `/api/market/symbols` | Binance USDT spot pairs, majors first |
 | GET | `/api/market/tickers?symbols=BTCUSDT,ETHUSDT` | Batch 24h tickers (max 24 symbols) |
+| GET | `/api/market/tickers/all` | Every tradable USDT ticker in one cached snapshot, sorted by 24h quote volume |
 | GET | `/api/market/ticker/:symbol` | Single 24h ticker |
 | GET | `/api/market/klines/:symbol?timeframe=1h&limit=500` | OHLCV series |
 | GET | `/api/market/klines/:symbol?startTime=…&endTime=…` | OHLCV by time range (used for replay) |
