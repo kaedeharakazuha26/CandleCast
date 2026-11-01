@@ -1,0 +1,8 @@
+The files in this directory are copied from the official Kronos repository:
+https://github.com/shiyu-coder/Kronos
+
+Copyright (c) 2025 ShiYu
+Licensed under the MIT License (see LICENSE).
+
+Do not modify the model architecture. Application-level preprocessing,
+validation, and HTTP serving live outside this folder.

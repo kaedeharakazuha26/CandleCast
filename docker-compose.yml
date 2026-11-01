@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kronos
+      POSTGRES_PASSWORD: kronos
+      POSTGRES_DB: kronos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kronos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  ai-service:
+    build: ./ai-service
+    environment:
+      MODEL_ID: NeoQuasar/Kronos-base
+      TOKENIZER_ID: NeoQuasar/Kronos-Tokenizer-base
+      DEVICE: auto
+      HF_HOME: /models
+    volumes:
+      - hf_cache:/models
+    ports:
+      - "8000:8000"
+    mem_limit: 8g
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://kronos:kronos@postgres:5432/kronos?schema=public
+      REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: http://ai-service:8000
+      FRONTEND_ORIGIN: http://localhost:8080,http://localhost:5173
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ai-service:
+        condition: service_started
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  hf_cache:

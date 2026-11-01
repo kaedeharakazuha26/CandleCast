@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Prediction {
+  id                    String   @id @default(cuid())
+  symbol                String
+  timeframe             String
+  horizon               Int
+  lookback              Int
+  marketTimestamp       BigInt
+  predictedCandles      Json
+  contextCandles        Json?
+  actualCandles         Json?
+  metrics               Json?
+  transformations       Json?
+  notes                 Json?
+  modelVersion          String
+  temperature           Float
+  topP                  Float
+  sampleCount           Int
+  uncertaintySamples    Int      @default(0)
+  sampleCloseStd        Json?
+  inferenceMs           Float
+  createdAt             DateTime @default(now())
+  evaluatedAt           DateTime?
+  explanation           String?
+  direction             String?
+  signal                String?
+
+  @@index([symbol, timeframe, createdAt])
+  @@index([evaluatedAt])
+}
+
+model BacktestRun {
+  id          String   @id @default(cuid())
+  symbol      String
+  timeframe   String
+  horizon     Int
+  lookback    Int
+  windowCount Int
+  status      String
+  metrics     Json?
+  points      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  finishedAt  DateTime?
+}
+
+model WatchlistItem {
+  id        String   @id @default(cuid())
+  symbol    String   @unique
+  createdAt DateTime @default(now())
+}
+
+model PriceAlert {
+  id          String    @id @default(cuid())
+  symbol      String
+  type        String
+  value       Float?
+  triggered   Boolean   @default(false)
+  triggeredAt DateTime?
+  message     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([triggered, symbol])
+}
+
+model AppSetting {
+  key   String @id
+  value String
+}
